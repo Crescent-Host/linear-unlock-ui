@@ -6,33 +6,37 @@ import {
   w3mConnectors,
   w3mProvider,
 } from "@web3modal/ethereum";
-
-import dynamic from "next/dynamic";
-
+import { Web3Modal } from "@web3modal/react";
 import { configureChains, createConfig, WagmiConfig } from "wagmi";
 import { base, baseGoerli } from "wagmi/chains";
-
 import { Box, Experimental_CssVarsProvider } from "@mui/material";
-import "styles/globals.scss";
 
+import "styles/globals.scss";
 import Layout from "components/Layout";
 
-// 👇 SSR-SAFE Web3Modal (THIS IS THE FIX)
-const Web3Modal = dynamic(
-  () => import("@web3modal/react").then((mod) => mod.Web3Modal),
-  { ssr: false }
-);
-
+/**
+ * CHAINS
+ */
 const chains = [base, baseGoerli];
+
+/**
+ * WalletConnect Project ID
+ */
 const projectId = "83fde4ab80cf5b97cff4927c19d25825";
 
+/**
+ * Wagmi + Web3Modal config
+ */
 const { publicClient } = configureChains(chains, [
   w3mProvider({ projectId }),
 ]);
 
 const wagmiConfig = createConfig({
   autoConnect: true,
-  connectors: w3mConnectors({ projectId, chains }),
+  connectors: w3mConnectors({
+    projectId,
+    chains,
+  }),
   publicClient,
 });
 
@@ -45,18 +49,23 @@ export default function App({ Component, pageProps }: AppProps) {
       defaultMode="dark"
     >
       <WagmiConfig config={wagmiConfig}>
-        <Box sx={{ bgcolor: "darkPurple.main" }} height="100%" width="100%">
+        <Box sx={{ bgcolor: "darkPurple.main" }} minHeight="100vh">
           <Layout>
             <Component {...pageProps} />
           </Layout>
         </Box>
       </WagmiConfig>
 
-      {/* 👇 CLIENT-ONLY, NO SSR CRASH */}
+      {/* 🔑 FIX IS HERE */}
       <Web3Modal
         projectId={projectId}
         ethereumClient={ethereumClient}
         themeMode="dark"
+
+        /** ⛔️ CRITICAL FIX */
+        enableInjected={false}
+        enableExplorer={true}
+
         themeVariables={{
           "--w3m-font-family": "Roboto, sans-serif",
           "--w3m-accent-color": "#730DE7",
