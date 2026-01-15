@@ -1,38 +1,33 @@
-import { Box, Stack, Typography } from "@mui/material";
-import { Web3Button } from "@web3modal/react";
-import Image from "next/image";
-import netherLogo from "public/logo.svg";
-import { PropsWithChildren } from "react";
+import { ReactNode } from "react";
+import { AppBar, Button, Toolbar, Typography } from "@mui/material";
+import { ethers } from "ethers";
 
-const Layout = ({ children }: PropsWithChildren) => (
-  <Box
-    sx={{
-      position: "fixed",
-      top: 0,
-      width: "100%",
-      height: "100%",
-      overflow: "auto",
-    }}
-  >
-    <Stack
-      direction="row"
-      sx={{
-        bgcolor: "secondary.main",
-        py: 2,
-        px: 4,
-        borderBottom: "1px solid",
-        borderColor: "lightPurple.main",
-      }}
-      alignItems="center"
-    >
-      <Image src={netherLogo} height={"40"} width={"160"} alt="Nether Logo" />
-      <Stack flexGrow={1} />
-      <Box className="connectButton">
-        <Web3Button />
-      </Box>
-    </Stack>
-    <Stack direction="column">{children}</Stack>
-  </Box>
-);
+interface Props {
+  children: ReactNode;
+  provider: ethers.providers.Web3Provider | null;
+  setProvider: (p: ethers.providers.Web3Provider) => void;
+  web3Modal: any;
+}
 
-export default Layout;
+export default function Layout({ children, provider, setProvider, web3Modal }: Props) {
+  const connectWallet = async () => {
+    if (!web3Modal) return;
+    const instance = await web3Modal.connect();
+    const provider = new ethers.providers.Web3Provider(instance);
+    setProvider(provider);
+  };
+
+  return (
+    <>
+      <AppBar position="static">
+        <Toolbar>
+          <Typography sx={{ flexGrow: 1 }}>Nether</Typography>
+          <Button color="inherit" onClick={connectWallet}>
+            Connect Wallet
+          </Button>
+        </Toolbar>
+      </AppBar>
+      {children}
+    </>
+  );
+}
